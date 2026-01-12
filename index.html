@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُيسّر تحضير الدراسات الاجتماعية</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Custom Scrollbar for hidden scroll areas */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Animation for Library Drawer */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .animate-slide-in-right {
+            animation: slideInRight 0.3s ease-out forwards;
+        }
+
+        /* Toast Animation */
+        @keyframes bounceIn {
+            0% { transform: translate(-50%, -100%); opacity: 0; }
+            50% { transform: translate(-50%, 10%); opacity: 1; }
+            100% { transform: translate(-50%, 0); }
+        }
+        .toast-animate {
+            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        /* Styles for details/summary marker customization */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 pb-24 md:pb-8 relative min-h-screen">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-[60] flex items-center gap-2 toast-animate">
+        <i data-lucide="check" class="w-5 h-5"></i>
+        <span>تم النسخ!</span>
+    </div>
+
+    <!-- Script Modal -->
+    <div id="scriptModal" class="hidden fixed inset-0 bg-black/50 z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-teal-700 p-4 flex justify-between items-center text-white">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <i data-lucide="code" class="w-5 h-5"></i>
+                    كود النقل الآلي
+                </h3>
+                <button onclick="toggleModal('scriptModal', false)" class="hover:bg-teal-600 p-1 rounded">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <!-- Instructions Block -->
+                <div class="bg-yellow-50 border-r-4 border-yellow-400 p-4 mb-4 rounded-md shadow-sm">
+                    <div class="flex">
+                        <div class="flex-shrink-0 ml-3">
+                            <i data-lucide="alert-circle" class="h-5 w-5 text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm leading-5 font-bold text-yellow-800">
+                                طريقة الاستخدام (خطوة بخطوة):
+                            </h3>
+                            <div class="mt-2 text-sm leading-relaxed text-yellow-800">
+                                <ol class="list-decimal list-inside space-y-1">
+                                    <li>اضغط زر <b>"نسخ الكود"</b> الموجود على الصندوق الأسود بالأسفل.</li>
+                                    <li>اذهب إلى صفحة التحضير في موقع الوزارة.</li>
+                                    <li>اضغط على مفتاح <b>F12</b> في لوحة المفاتيح (أو زر الفأرة اليمين -> فحص / Inspect).</li>
+                                    <li>اختر تبويب <b>Console</b> من النافذة التي ظهرت.</li>
+                                    <li><span class="font-bold text-red-600 bg-white px-1 rounded">تنبيه أمني:</span> إذا ظهر تحذير يمنع اللصق، اكتب كلمة <code class="bg-white px-1 border border-yellow-300 font-mono text-red-600 select-all" dir="ltr">allow pasting</code> واضغط Enter.</li>
+                                    <li>الصق الكود (Ctrl+V) ثم اضغط <b>Enter</b> ليقوم بتعبئة الحقول تلقائياً.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative mt-2">
+                    <textarea id="scriptOutput" readonly class="w-full h-48 bg-gray-900 text-green-400 font-mono text-xs p-4 rounded-lg dir-ltr text-left focus:ring-2 focus:ring-teal-500 outline-none" dir="ltr"></textarea>
+                    <button onclick="copyScript()" class="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded text-xs backdrop-blur-sm border border-white/20">
+                        نسخ الكود
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 flex justify-end">
+                <button onclick="toggleModal('scriptModal', false)" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-gray-700">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Library Drawer -->
+    <div id="libraryModal" class="hidden fixed inset-0 bg-black/50 z-[80] flex justify-end">
+        <div class="bg-white w-full md:w-[450px] h-full shadow-2xl p-6 overflow-y-auto animate-slide-in-right flex flex-col">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <i data-lucide="database" class="w-5 h-5 text-teal-600"></i>
+                        إدارة قاعدة البيانات
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-1">عدد الدروس المحفوظة: <span id="savedCount">0</span></p>
+                    <p class="text-[10px] text-teal-600 mt-0.5">* مصنفة حسب الصفوف</p>
+                </div>
+                <button onclick="toggleModal('libraryModal', false)" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Export/Import Buttons -->
+            <div class="flex gap-2 mb-6 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                <button onclick="exportDatabase()" class="flex-1 flex flex-col items-center justify-center p-3 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all text-sm font-medium text-gray-700 shadow-sm">
+                    <i data-lucide="download" class="w-5 h-5 mb-1 text-blue-600"></i>
+                    تصدير (نسخ احتياطي)
+                </button>
+                
+                <button onclick="document.getElementById('fileInput').click()" class="flex-1 flex flex-col items-center justify-center p-3 bg-white border border-gray-300 rounded-lg hover:bg-green-50 hover:border-green-300 transition-all text-sm font-medium text-gray-700 shadow-sm">
+                    <i data-lucide="upload" class="w-5 h-5 mb-1 text-green-600"></i>
+                    استيراد ملف
+                </button>
+                <input type="file" id="fileInput" onchange="importDatabase(event)" accept=".json" class="hidden" />
+            </div>
+
+            <!-- Library List -->
+            <div id="libraryList" class="flex-1 overflow-y-auto space-y-3 pb-8">
+                <!-- Items will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mb-8 mt-4">
+        
+        <!-- Header -->
+        <div class="bg-teal-700 p-6 text-white">
+            <div class="flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold flex items-center gap-2">
+                        <i data-lucide="globe" class="w-8 h-8 text-teal-200"></i>
+                        مُيسّر تحضير الدراسات الاجتماعية
+                    </h1>
+                    <p class="text-teal-100 mt-2 text-sm opacity-90">
+                        مكتبة شاملة لتحضير دروسك ونقلها بسهولة.
+                    </p>
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <button onclick="toggleModal('libraryModal', true)" class="bg-teal-600 hover:bg-teal-500 text-white border border-teal-400 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold shadow-sm">
+                        <i data-lucide="folder-open" class="w-4 h-4"></i>
+                        <span>المكتبة (<span id="btnLibraryCount">0</span>)</span>
+                    </button>
+                    
+                    <button onclick="saveCurrentPlan()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold shadow-sm">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        <span>حفظ</span>
+                    </button>
+
+                    <button onclick="showScriptDialog()" class="bg-teal-800/50 hover:bg-teal-600 text-teal-50 border border-teal-500/30 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
+                        <i data-lucide="code" class="w-4 h-4"></i>
+                        <span>نقل</span>
+                    </button>
+                    
+                    <button onclick="clearForm()" class="bg-red-500/20 hover:bg-red-600 text-white border border-red-400/30 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm" title="تحضير جديد">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="p-6 grid gap-6 pb-12">
+            
+            <!-- Metadata -->
+            <div class="bg-blue-50 p-5 rounded-xl border border-blue-200 shadow-sm">
+                <div class="mb-4">
+                    <label class="block text-blue-900 font-bold mb-1 text-sm">عنوان الدرس:</label>
+                    <input type="text" id="title" placeholder="مثال: الدرس الأول - الموقع الجغرافي للوطن العربي" class="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-blue-800 font-bold mb-1 text-xs flex items-center gap-1">
+                            <i data-lucide="layers" class="w-3.5 h-3.5"></i> الصف:
+                        </label>
+                        <select id="grade" class="w-full p-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                            <option value="">اختر الصف...</option>
+                            <option value="الصف الأول">الصف الأول</option>
+                            <option value="الصف الثاني">الصف الثاني</option>
+                            <option value="الصف الثالث">الصف الثالث</option>
+                            <option value="الصف الرابع">الصف الرابع</option>
+                            <option value="الصف الخامس">الصف الخامس</option>
+                            <option value="الصف السادس">الصف السادس</option>
+                            <option value="الصف السابع">الصف السابع</option>
+                            <option value="الصف الثامن">الصف الثامن</option>
+                            <option value="الصف التاسع">الصف التاسع</option>
+                            <option value="الصف العاشر">الصف العاشر</option>
+                            <option value="الصف الحادي عشر">الصف الحادي عشر</option>
+                            <option value="الصف الثاني عشر">الصف الثاني عشر</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-blue-800 font-bold mb-1 text-xs flex items-center gap-1">
+                            <i data-lucide="book-open" class="w-3.5 h-3.5"></i> المادة:
+                        </label>
+                        <select id="subject" class="w-full p-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                            <option value="">اختر المادة...</option>
+                            <option value="الدراسات الاجتماعية">الدراسات الاجتماعية</option>
+                            <option value="الجغرافيا الاقتصادية">الجغرافيا الاقتصادية</option>
+                            <option value="الجغرافيا والتقنيات الحديثة">الجغرافيا والتقنيات الحديثة</option>
+                            <option value="هذا وطني">هذا وطني</option>
+                            <option value="العالم من حولي">العالم من حولي</option>
+                            <option value="الحضارة الإسلامية">الحضارة الإسلامية</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-blue-800 font-bold mb-1 text-xs flex items-center gap-1">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5"></i> الفصل:
+                        </label>
+                        <select id="semester" class="w-full p-2 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                            <option value="">اختر الفصل...</option>
+                            <option value="الفصل الدراسي الأول">الفصل الدراسي الأول</option>
+                            <option value="الفصل الدراسي الثاني">الفصل الدراسي الثاني</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-gray-100">
+
+            <!-- Sections Container -->
+            
+            <!-- 1. Concepts -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center rounded-t-xl">
+                    <label class="font-bold text-gray-700 flex items-center gap-2">
+                        <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full">1</span>
+                        <i data-lucide="lightbulb" class="w-4 h-4 text-yellow-500"></i>
+                        المفاهيم
+                    </label>
+                    <button onclick="copyToClipboard('concepts', 'concepts')" class="text-gray-500 hover:text-teal-600">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="mb-2 flex flex-wrap" id="quick-concepts"></div>
+                    <textarea id="concepts" class="w-full h-20 p-3 border border-gray-300 rounded-lg focus:outline-none resize-y text-gray-700"></textarea>
+                </div>
+            </div>
+
+            <!-- 2. Intro -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center rounded-t-xl">
+                    <label class="font-bold text-gray-700 flex items-center gap-2">
+                        <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full">2</span>
+                        <i data-lucide="book-open" class="w-4 h-4 text-blue-500"></i>
+                        التهيئة / التمهيد
+                    </label>
+                    <button onclick="copyToClipboard('intro', 'intro')" class="text-gray-500 hover:text-teal-600">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="mb-2 flex flex-wrap" id="quick-intro"></div>
+                    <textarea id="intro" class="w-full h-20 p-3 border border-gray-300 rounded-lg focus:outline-none resize-y text-gray-700"></textarea>
+                </div>
+            </div>
+
+            <!-- 3. Procedures -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center rounded-t-xl">
+                    <label class="font-bold text-gray-700 flex items-center gap-2">
+                        <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full">3</span>
+                        <i data-lucide="users" class="w-4 h-4 text-purple-500"></i>
+                        الإجراءات / الأنشطة
+                    </label>
+                    <button onclick="copyToClipboard('procedures', 'procedures')" class="text-gray-500 hover:text-teal-600">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="mb-2 flex flex-wrap" id="quick-procedures"></div>
+                    <textarea id="procedures" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none resize-y text-gray-700"></textarea>
+                </div>
+            </div>
+
+            <!-- Grid for Assessments -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 4. Formative -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center rounded-t-xl">
+                        <label class="font-bold text-gray-700 flex items-center gap-2">
+                            <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full">4</span>
+                            <i data-lucide="pen-tool" class="w-4 h-4 text-orange-500"></i>
+                            التقويم التكويني
+                        </label>
+                        <button onclick="copyToClipboard('formativeAssessment', 'formativeAssessment')" class="text-gray-500 hover:text-teal-600">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                         <div class="mb-2 flex flex-wrap" id="quick-formativeAssessment"></div>
+                        <textarea id="formativeAssessment" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none resize-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- 5. Summative -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <div class="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center rounded-t-xl">
+                        <label class="font-bold text-gray-700 flex items-center gap-2">
+                            <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full">5</span>
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-red-500"></i>
+                            التقويم الختامي
+                        </label>
+                        <button onclick="copyToClipboard('summativeAssessment', 'summativeAssessment')" class="text-gray-500 hover:text-teal-600">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div class="p-4">
+                        <div class="mb-2 flex flex-wrap" id="quick-summativeAssessment"></div>
+                        <textarea id="summativeAssessment" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none resize-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Weekly Notes -->
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <div class="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center rounded-t-xl">
+                    <label class="font-bold text-gray-700 flex items-center gap-2">
+                        <span class="bg-teal-600 text-white text-xs px-2 py-0.5 rounded-full">6</span>
+                        <i data-lucide="users" class="w-4 h-4 text-indigo-500"></i>
+                        ملاحظات الخطة
+                    </label>
+                    <button onclick="copyToClipboard('weeklyNotes', 'weeklyNotes')" class="text-gray-500 hover:text-teal-600">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="mb-2 flex flex-wrap" id="quick-weeklyNotes"></div>
+                    <textarea id="weeklyNotes" class="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none resize-y text-gray-700"></textarea>
+                </div>
+            </div>
+
+            <!-- Designer Footer -->
+            <div class="text-center mt-8 pb-4">
+                <p class="text-teal-800/60 font-semibold text-sm flex items-center justify-center gap-2">
+                    <i data-lucide="pen-tool" class="w-3 h-3"></i>
+                    تصميم: أ. عبدالله بن خلف الرواحي
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Sticky Quick Copy Bar -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-2 z-40">
+        <div class="max-w-4xl mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-2">
+            <span class="text-xs font-bold text-gray-500 ml-2 whitespace-nowrap hidden md:inline">نسخ:</span>
+            
+            <button onclick="copyToClipboard('concepts', 'concepts')" id="btn-copy-concepts" class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
+                <span>1 المفاهيم</span>
+            </button>
+            <button onclick="copyToClipboard('intro', 'intro')" id="btn-copy-intro" class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
+                <span>2 التهيئة</span>
+            </button>
+            <button onclick="copyToClipboard('procedures', 'procedures')" id="btn-copy-procedures" class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
+                <span>3 الإجراءات</span>
+            </button>
+            <button onclick="copyToClipboard('formativeAssessment', 'formativeAssessment')" id="btn-copy-formativeAssessment" class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
+                <span>4 ت.تكويني</span>
+            </button>
+            <button onclick="copyToClipboard('summativeAssessment', 'summativeAssessment')" id="btn-copy-summativeAssessment" class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
+                <span>5 ت.ختامي</span>
+            </button>
+            
+            <div class="border-r border-gray-300 h-6 mx-1"></div>
+            
+            <button onclick="copyFullText()" class="flex-shrink-0 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 mr-auto">
+                <i data-lucide="copy" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">نسخ الكل</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- DATA & STATE ---
+        let currentId = null; // null means new plan
+        let savedPlans = [];
+
+        // Predefined Quick Inserts
+        const quickInserts = {
+            concepts: [
+                {t: "الموقع الجغرافي", l: "موقع جغرافي"},
+                {t: "التضاريس والمناخ", l: "تضاريس"},
+                {t: "الهوية الوطنية", l: "هوية وطنية"},
+                {t: "الموارد الطبيعية", l: "موارد طبيعية"}
+            ],
+            intro: [
+                {t: "عرض صورة وسؤال الطلاب", l: "صورة"},
+                {t: "سرد قصة قصيرة", l: "قصة"},
+                {t: "مراجعة الدرس السابق", l: "مراجعة"},
+                {t: "طرح سؤال مثير للتفكير", l: "سؤال مثير"}
+            ],
+            procedures: [
+                {t: "العصف الذهني", l: "عصف ذهني"},
+                {t: "العمل في مجموعات", l: "مجموعات"},
+                {t: "الحوار والمناقشة", l: "حوار"},
+                {t: "قراءة الخرائط وتحليلها", l: "تحليل خرائط"},
+                {t: "جدول التعلم الذاتي (KWL)", l: "KWL"}
+            ],
+            formativeAssessment: [
+                {t: "أسئلة شفهية", l: "شفهي"},
+                {t: "الملاحظة المباشرة", l: "ملاحظة"},
+                {t: "استراتيجية فكر-زاوج-شارك", l: "فكر-زاوج"}
+            ],
+            summativeAssessment: [
+                {t: "حل أسئلة الكتاب", l: "أسئلة كتاب"},
+                {t: "إجابة ورقة العمل", l: "ورقة عمل"},
+                {t: "تلخيص الدرس", l: "تلخيص"}
+            ],
+            weeklyNotes: [
+                {t: "متابعة حل الواجب", l: "واجب"},
+                {t: "يوجد اختبار قصير", l: "اختبار"},
+                {t: "إحضار الأطلس", l: "أدوات"}
+            ]
+        };
+
+        // Grade Order for Sorting
+        const gradeOrder = [
+            "الصف الأول", "الصف الثاني", "الصف الثالث", "الصف الرابع", 
+            "الصف الخامس", "الصف السادس", "الصف السابع", "الصف الثامن", 
+            "الصف التاسع", "الصف العاشر", "الصف الحادي عشر", "الصف الثاني عشر"
+        ];
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Lucide Icons
+            lucide.createIcons();
+            
+            // Load Data
+            const saved = localStorage.getItem('socialStudiesPlans');
+            if (saved) {
+                try {
+                    savedPlans = JSON.parse(saved);
+                    updateLibraryUI();
+                } catch(e) { console.error("Error loading plans", e); }
+            }
+
+            // Render Quick Inserts
+            for (const [field, items] of Object.entries(quickInserts)) {
+                const container = document.getElementById(`quick-${field}`);
+                if(container) {
+                    items.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = "text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors border border-blue-200 ml-2 mb-1";
+                        btn.innerText = `+ ${item.l}`;
+                        btn.onclick = () => insertText(field, item.t);
+                        container.appendChild(btn);
+                    });
+                }
+            }
+        });
+
+        // --- CORE FUNCTIONS ---
+
+        function getValue(id) {
+            return document.getElementById(id).value;
+        }
+
+        function setValue(id, val) {
+            document.getElementById(id).value = val || '';
+        }
+
+        function insertText(fieldId, text) {
+            const el = document.getElementById(fieldId);
+            if (el.value) {
+                el.value += ' - ' + text;
+            } else {
+                el.value = text;
+            }
+        }
+
+        function toggleModal(id, show) {
+            const el = document.getElementById(id);
+            if(show) {
+                el.classList.remove('hidden');
+                if (id === 'libraryModal') updateLibraryUI();
+            }
+            else el.classList.add('hidden');
+        }
+
+        function showToastMsg() {
+            const t = document.getElementById('toast');
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 2000);
+        }
+
+        // --- COPY LOGIC ---
+
+        function copyToClipboard(sourceId, sectionName) {
+            let text = "";
+            if(sourceId === 'FULL_TEXT') {
+                text = generateFullTextContent();
+            } else {
+                text = getValue(sourceId);
+            }
+
+            if (!text) return;
+
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToastMsg();
+                
+                if (sectionName) {
+                    const btn = document.getElementById(`btn-copy-${sectionName}`);
+                    if(btn) {
+                        const originalClass = btn.className;
+                        const originalHTML = btn.innerHTML;
+                        btn.className = "flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-green-600 text-white transition-all";
+                        btn.innerHTML += ' <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>';
+                        setTimeout(() => {
+                            btn.className = originalClass;
+                            btn.innerHTML = originalHTML;
+                        }, 2000);
+                    }
+                }
+
+            } catch (err) {
+                console.error('Copy failed', err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        function copyFullText() {
+            copyToClipboard('FULL_TEXT');
+        }
+
+        function generateFullTextContent() {
+            return `
+عنوان الدرس: ${getValue('title')}
+الصف: ${getValue('grade')} | المادة: ${getValue('subject')} | الفصل: ${getValue('semester')}
+----------------------------------------
+=== المفاهيم والتهيئة ===
+${getValue('concepts')}
+
+=== التهيئة / التمهيد / التعلم القبلي ===
+${getValue('intro')}
+
+=== إجراءات سير الدرس / الأنشطة التدريسية ===
+${getValue('procedures')}
+
+=== التقويم التكويني ===
+${getValue('formativeAssessment')}
+
+=== التقويم الختامي ===
+${getValue('summativeAssessment')}
+
+=== ملاحظات الخطة الأسبوعية ===
+${getValue('weeklyNotes')}
+            `.trim();
+        }
+
+        // --- SCRIPT GENERATION ---
+
+        function showScriptDialog() {
+            const script = generateAutoFillScript();
+            document.getElementById('scriptOutput').value = script;
+            toggleModal('scriptModal', true);
+        }
+
+        function copyScript() {
+            const el = document.getElementById('scriptOutput');
+            el.select();
+            document.execCommand('copy');
+            showToastMsg();
+        }
+
+        function generateAutoFillScript() {
+            const clean = (str) => str.replace(/\n/g, '\\n').replace(/"/g, '\\"').replace(/\r/g, '');
+            
+            const concepts = clean(getValue('concepts'));
+            const intro = clean(getValue('intro'));
+            const procedures = clean(getValue('procedures'));
+            const formative = clean(getValue('formativeAssessment'));
+            const summative = clean(getValue('summativeAssessment'));
+            const notes = clean(getValue('weeklyNotes'));
+
+            return `
+(function() {
+  console.clear();
+  console.log("%c بدء التعبئة الآلية...", "color: white; background: purple; font-size: 14px; padding: 4px;");
+
+  const dataList = [
+    "${concepts}",          
+    "${intro}",             
+    "${procedures}",        
+    "${formative}",
+    "${summative}",
+    "${notes}"        
+  ];
+
+  let successCount = 0;
+  if (window.CKEDITOR && window.CKEDITOR.instances) {
+    const editorKeys = Object.keys(window.CKEDITOR.instances);
+    if (editorKeys.length > 0) {
+       dataList.forEach((text, index) => {
+         const key = editorKeys[index]; 
+         if (key && window.CKEDITOR.instances[key]) {
+           try { window.CKEDITOR.instances[key].setData(text); successCount++; } catch(e) {}
+         }
+       });
+       if (successCount > 0) { alert('تم تعبئة ' + successCount + ' حقول (CKEditor)!'); return; }
+    }
+  }
+  
+  const textareas = Array.from(document.querySelectorAll('textarea'));
+  const inputs = Array.from(document.querySelectorAll('input[type="text"]'));
+  let fields = [...textareas, ...inputs].filter(el => true);
+  const startOffset = 0; 
+
+  dataList.forEach((text, index) => {
+    let targetIndex = index + startOffset;
+    if (fields[targetIndex]) {
+      fields[targetIndex].value = text;
+      fields[targetIndex].dispatchEvent(new Event('input', { bubbles: true }));
+      fields[targetIndex].dispatchEvent(new Event('change', { bubbles: true }));
+      if(fields[targetIndex].style.display !== 'none') {
+          fields[targetIndex].style.backgroundColor = '#e6fffa';
+          fields[targetIndex].style.border = '2px solid purple';
+      }
+      successCount++;
+    }
+  });
+  alert('تمت المحاولة التقليدية. تم تعبئة ' + successCount + ' حقول.');
+})();`.trim();
+        }
+
+        // --- LIBRARY LOGIC ---
+
+        function saveToStorage() {
+            localStorage.setItem('socialStudiesPlans', JSON.stringify(savedPlans));
+            updateLibraryUI();
+        }
+
+        function saveCurrentPlan() {
+            const title = getValue('title');
+            if (!title.trim()) {
+                alert('الرجاء كتابة عنوان للدرس قبل الحفظ.');
+                return;
+            }
+
+            const planData = {
+                id: currentId || Date.now(),
+                title: title,
+                grade: getValue('grade'),
+                subject: getValue('subject'),
+                semester: getValue('semester'),
+                concepts: getValue('concepts'),
+                intro: getValue('intro'),
+                procedures: getValue('procedures'),
+                formativeAssessment: getValue('formativeAssessment'),
+                summativeAssessment: getValue('summativeAssessment'),
+                weeklyNotes: getValue('weeklyNotes'),
+                lastModified: new Date().toLocaleDateString('ar-EG')
+            };
+
+            const existingIndex = savedPlans.findIndex(p => p.id === planData.id);
+
+            if (existingIndex >= 0) {
+                if (confirm('أنت تقوم بتعديل درس موجود مسبقاً، هل تريد حفظ التغييرات عليه؟')) {
+                    savedPlans[existingIndex] = planData;
+                } else {
+                    return;
+                }
+            } else {
+                savedPlans.push(planData);
+                currentId = planData.id; 
+            }
+
+            saveToStorage();
+            alert('تم الحفظ بنجاح!');
+        }
+
+        function deletePlan(id, event) {
+            event.stopPropagation();
+            if (confirm('هل أنت متأكد من حذف هذا الدرس نهائياً؟')) {
+                savedPlans = savedPlans.filter(p => p.id !== id);
+                saveToStorage();
+                if (currentId === id) currentId = null;
+            }
+        }
+
+        function loadPlan(id) {
+            const plan = savedPlans.find(p => p.id === id);
+            if (!plan) return;
+
+            if (confirm(`هل أنت متأكد من تحميل درس "${plan.title}"؟ سيتم استبدال البيانات الحالية.`)) {
+                currentId = plan.id;
+                setValue('title', plan.title);
+                setValue('grade', plan.grade);
+                setValue('subject', plan.subject);
+                setValue('semester', plan.semester);
+                setValue('concepts', plan.concepts);
+                setValue('intro', plan.intro);
+                setValue('procedures', plan.procedures);
+                setValue('formativeAssessment', plan.formativeAssessment);
+                setValue('summativeAssessment', plan.summativeAssessment);
+                setValue('weeklyNotes', plan.weeklyNotes);
+                
+                toggleModal('libraryModal', false);
+            }
+        }
+
+        function clearForm() {
+            if (confirm('هل أنت متأكد من بدء تحضير جديد ومسح الحقول الحالية؟')) {
+                currentId = null;
+                setValue('title', '');
+                setValue('grade', '');
+                setValue('subject', '');
+                setValue('semester', '');
+                setValue('concepts', '');
+                setValue('intro', '');
+                setValue('procedures', '');
+                setValue('formativeAssessment', '');
+                setValue('summativeAssessment', '');
+                setValue('weeklyNotes', '');
+            }
+        }
+
+        // --- SORTING & EXPORT/IMPORT ---
+
+        function updateLibraryUI() {
+            const container = document.getElementById('libraryList');
+            document.getElementById('savedCount').innerText = savedPlans.length;
+            document.getElementById('btnLibraryCount').innerText = savedPlans.length;
+            
+            if (savedPlans.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 mt-10 p-4 border-2 border-dashed border-gray-300 rounded-xl">
+                        <p>المكتبة فارغة.</p>
+                    </div>`;
+                return;
+            }
+
+            // Grouping Logic
+            const grouped = {};
+            gradeOrder.forEach(g => grouped[g] = []);
+            grouped["غير مصنف"] = []; 
+
+            savedPlans.forEach(plan => {
+                if (plan.grade && grouped[plan.grade]) {
+                    grouped[plan.grade].push(plan);
+                } else if (plan.grade) {
+                     if(!grouped[plan.grade]) grouped[plan.grade] = [];
+                     grouped[plan.grade].push(plan);
+                } else {
+                    grouped["غير مصنف"].push(plan);
+                }
+            });
+
+            let html = '';
+            
+            // Iterate through keys: Grade order first, then extras
+            const allKeys = [...gradeOrder, ...Object.keys(grouped).filter(k => !gradeOrder.includes(k) && k !== "غير مصنف"), "غير مصنف"];
+
+            allKeys.forEach(grade => {
+                const plans = grouped[grade];
+                // Sort plans alphabetically by title inside the folder
+                plans.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+
+                if (plans && plans.length > 0) {
+                    html += `
+                    <details class="group mb-3 border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm" open>
+                        <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer font-bold text-gray-700 hover:bg-gray-100 transition select-none">
+                            <div class="flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#ccfbf1" stroke="#0d9488" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 2H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                                <span>${grade}</span>
+                                <span class="text-[10px] bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full min-w-[20px] text-center">${plans.length}</span>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down text-gray-400 group-open:rotate-180 transition-transform"><path d="m6 9 6 6 6-6"/></svg>
+                        </summary>
+                        <div class="p-2 space-y-2 bg-white border-t border-gray-100">
+                    `;
+                    
+                    plans.forEach(plan => {
+                        html += `
+                        <div onclick="loadPlan(${plan.id})" class="border border-gray-100 rounded-md p-3 hover:bg-teal-50 cursor-pointer transition-colors group/item relative bg-white shadow-sm flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] text-gray-500 border border-gray-200 px-1.5 py-0.5 rounded-md">
+                                        ${plan.semester || "-"}
+                                    </span>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-sm mb-1 line-clamp-1">${plan.title || 'بدون عنوان'}</h3>
+                                <div class="flex flex-wrap gap-2 text-xs text-gray-500 mb-1">
+                                    ${plan.subject ? `<span class="text-purple-700 font-medium">${plan.subject}</span>` : ''}
+                                </div>
+                                <p class="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-days"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
+                                    ${plan.lastModified}
+                                </p>
+                            </div>
+                            <button onclick="deletePlan(${plan.id}, event)" class="text-gray-400 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors" title="حذف">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                            </button>
+                        </div>`;
+                    });
+
+                    html += `</div></details>`;
+                }
+            });
+
+            container.innerHTML = html;
+            lucide.createIcons(); // Re-render icons
+        }
+
+        function exportDatabase() {
+            if (savedPlans.length === 0) {
+                alert('لا توجد بيانات لتصديرها.');
+                return;
+            }
+            const dataStr = JSON.stringify(savedPlans, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `SocialStudies_Backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const content = e.target.result;
+                    const parsedData = JSON.parse(content);
+                    
+                    if (!Array.isArray(parsedData)) {
+                        alert('خطأ: صيغة الملف غير صحيحة.');
+                        return;
+                    }
+
+                    if (confirm(`سيتم استبدال المكتبة الحالية (${savedPlans.length} درس) بالملف الجديد (${parsedData.length} درس). هل أنت متأكد؟`)) {
+                        savedPlans = parsedData;
+                        saveToStorage();
+                        alert('تم استعادة قاعدة البيانات بنجاح!');
+                    }
+                } catch (error) {
+                    alert('حدث خطأ أثناء قراءة الملف. تأكد أنه ملف JSON صالح.');
+                    console.error(error);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = null;
+        }
+
+    </script>
+</body>
+</html>
