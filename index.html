@@ -177,14 +177,14 @@
                         إدارة قاعدة البيانات
                     </h2>
                     <p class="text-xs text-gray-500 mt-1">عدد الدروس المحفوظة: <span id="savedCount">0</span></p>
-                    <p class="text-[10px] text-teal-600 mt-0.5">* مصنفة حسب الصفوف</p>
+                    <p class="text-[10px] text-teal-600 mt-0.5">* مصنفة حسب الصفوف والفصول</p>
                 </div>
                 <button onclick="toggleModal('libraryModal', false)" class="bg-gray-100 p-2 rounded-full hover:bg-gray-200">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <div class="flex gap-2 mb-6 bg-gray-50 p-3 rounded-xl border border-gray-200">
+            <div class="flex gap-2 mb-2 bg-gray-50 p-3 rounded-t-xl border-x border-t border-gray-200">
                 <button onclick="exportDatabase()" class="flex-1 flex flex-col items-center justify-center p-3 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all text-sm font-medium text-gray-700 shadow-sm">
                     <i data-lucide="download" class="w-5 h-5 mb-1 text-blue-600"></i>
                     تصدير (نسخ احتياطي)
@@ -195,6 +195,13 @@
                     استيراد ملف
                 </button>
                 <input type="file" id="fileInput" onchange="importDatabase(event)" accept=".json" class="hidden" />
+            </div>
+            
+            <div class="mb-4 bg-gray-50 p-2 rounded-b-xl border-x border-b border-gray-200 text-center">
+                 <button onclick="clearLibrary()" class="w-full flex items-center justify-center gap-2 p-2 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 rounded transition-colors font-medium border border-transparent hover:border-red-200">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    حذف المكتبة بالكامل
+                </button>
             </div>
 
             <div id="libraryList" class="flex-1 overflow-y-auto space-y-3 pb-8"></div>
@@ -864,6 +871,15 @@
             updateLibraryUI();
         }
 
+        function clearLibrary() {
+            if (confirm('تحذير: هل أنت متأكد تماماً من حذف جميع الدروس المحفوظة في المكتبة؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                localStorage.removeItem('socialStudiesPlans');
+                savedPlans = [];
+                updateLibraryUI();
+                alert('تم حذف المكتبة بنجاح.');
+            }
+        }
+
         function saveCurrentPlan() {
             const title = getValue('title');
             if (!title.trim()) {
@@ -983,9 +999,19 @@
 
             allKeys.forEach(grade => {
                 const plans = grouped[grade];
-                plans.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-
+                
                 if (plans && plans.length > 0) {
+                    // Separate plans by semester
+                    const sem1 = plans.filter(p => p.semester && p.semester.includes('الأول'));
+                    const sem2 = plans.filter(p => p.semester && p.semester.includes('الثاني'));
+                    const others = plans.filter(p => !p.semester || (!p.semester.includes('الأول') && !p.semester.includes('الثاني')));
+
+                    // Sort each group alphabetically
+                    const sortByTitle = (a, b) => (a.title || "").localeCompare(b.title || "");
+                    sem1.sort(sortByTitle);
+                    sem2.sort(sortByTitle);
+                    others.sort(sortByTitle);
+
                     html += `
                     <details class="group mb-3 border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm" open>
                         <summary class="flex items-center justify-between p-3 bg-gray-50 cursor-pointer font-bold text-gray-700 hover:bg-gray-100 transition select-none">
@@ -999,8 +1025,7 @@
                         <div class="p-2 space-y-2 bg-white border-t border-gray-100">
                     `;
                     
-                    plans.forEach(plan => {
-                        html += `
+                    const renderPlanItem = (plan) => `
                         <div onclick="loadPlan(${plan.id})" class="border border-gray-100 rounded-md p-3 hover:bg-teal-50 cursor-pointer transition-colors group/item relative bg-white shadow-sm flex items-start justify-between">
                             <div class="flex-1">
                                 <div class="flex items-center gap-2 mb-1">
@@ -1021,7 +1046,21 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
                             </button>
                         </div>`;
-                    });
+
+                    if (sem1.length > 0) {
+                        html += `<div class="text-xs font-bold text-teal-800 bg-teal-50 px-2 py-1 rounded mt-2 mb-1">الفصل الدراسي الأول</div>`;
+                        sem1.forEach(p => html += renderPlanItem(p));
+                    }
+                    if (sem2.length > 0) {
+                        html += `<div class="text-xs font-bold text-teal-800 bg-teal-50 px-2 py-1 rounded mt-2 mb-1">الفصل الدراسي الثاني</div>`;
+                        sem2.forEach(p => html += renderPlanItem(p));
+                    }
+                    if (others.length > 0) {
+                        if (sem1.length > 0 || sem2.length > 0) {
+                             html += `<div class="text-xs font-bold text-gray-600 bg-gray-50 px-2 py-1 rounded mt-2 mb-1">غير محدد</div>`;
+                        }
+                        others.forEach(p => html += renderPlanItem(p));
+                    }
 
                     html += `</div></details>`;
                 }
