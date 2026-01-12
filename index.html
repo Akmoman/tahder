@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مُيسّر تحضير الدراسات الاجتماعية</title>
+    <title>مُيسّر تحضير مادة الدراسات الاجتماعية على منصة نور</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -44,12 +44,51 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        /* Styles for details/summary marker customization */
         details > summary {
             list-style: none;
         }
         details > summary::-webkit-details-marker {
             display: none;
+        }
+
+        /* Rich Editor Styles */
+        .rich-input {
+            min-height: 150px;
+            max-height: 400px;
+            overflow-y: auto;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            outline: none;
+            transition: box-shadow 0.2s, border-color 0.2s;
+        }
+        .rich-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .rich-input table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 0.5em 0;
+        }
+        .rich-input table, .rich-input th, .rich-input td {
+            border: 1px solid #cbd5e1;
+            padding: 4px 8px;
+        }
+        .rich-input img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .rich-input:empty:before {
+            content: attr(data-placeholder);
+            color: #9ca3af;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -58,7 +97,7 @@
     <!-- Toast Notification -->
     <div id="toast" class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-[60] flex items-center gap-2 toast-animate">
         <i data-lucide="check" class="w-5 h-5"></i>
-        <span>تم النسخ!</span>
+        <span>تم النسخ بنجاح!</span>
     </div>
 
     <!-- Script Modal -->
@@ -67,32 +106,47 @@
             <div class="bg-teal-700 p-4 flex justify-between items-center text-white">
                 <h3 class="font-bold text-lg flex items-center gap-2">
                     <i data-lucide="code" class="w-5 h-5"></i>
-                    كود النقل الآلي
+                    كود النقل الآلي (يدعم الصور)
                 </h3>
                 <button onclick="toggleModal('scriptModal', false)" class="hover:bg-teal-600 p-1 rounded">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <div class="p-6 overflow-y-auto">
-                <!-- Instructions Block -->
+                <div class="bg-blue-50 border-r-4 border-blue-400 p-4 mb-4 rounded-md shadow-sm">
+                    <div class="flex">
+                        <div class="flex-shrink-0 ml-3">
+                            <i data-lucide="info" class="h-5 w-5 text-blue-600"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm leading-5 font-bold text-blue-800">
+                                ملاحظة حول الصور:
+                            </h3>
+                            <div class="mt-2 text-sm leading-relaxed text-blue-800">
+                                <p>لضمان انتقال الصور، يفضل استخدام أزرار <b>"نسخ (ذكي)"</b> الموجودة بجانب كل قسم ولصقها يدوياً.</p>
+                                <p class="mt-1">إذا كنت تستخدم الكود أدناه، فقد تم تحديثه ليدعم الصور، ولكن بعض أنظمة الوزارة تمنع الصور الآلية. في هذه الحالة، <b>اللصق اليدوي</b> هو الحل الأفضل.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-yellow-50 border-r-4 border-yellow-400 p-4 mb-4 rounded-md shadow-sm">
                     <div class="flex">
                         <div class="flex-shrink-0 ml-3">
-                            <i data-lucide="alert-circle" class="h-5 w-5 text-yellow-600"></i>
+                            <i data-lucide="terminal" class="h-5 w-5 text-yellow-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-sm leading-5 font-bold text-yellow-800">
-                                طريقة الاستخدام (خطوة بخطوة):
+                            <h3 class="text-base leading-6 font-bold text-yellow-800 mb-2">
+                                خطوات التنفيذ (بالتفصيل):
                             </h3>
-                            <div class="mt-2 text-sm leading-relaxed text-yellow-800">
-                                <ol class="list-decimal list-inside space-y-1">
-                                    <li>اضغط زر <b>"نسخ الكود"</b> الموجود على الصندوق الأسود بالأسفل.</li>
-                                    <li>اذهب إلى صفحة التحضير في موقع الوزارة.</li>
-                                    <li>اضغط على مفتاح <b>F12</b> في لوحة المفاتيح (أو زر الفأرة اليمين -> فحص / Inspect).</li>
-                                    <li>اختر تبويب <b>Console</b> من النافذة التي ظهرت.</li>
-                                    <li><span class="font-bold text-red-600 bg-white px-1 rounded">تنبيه أمني:</span> إذا ظهر تحذير يمنع اللصق، اكتب كلمة <code class="bg-white px-1 border border-yellow-300 font-mono text-red-600 select-all" dir="ltr">allow pasting</code> واضغط Enter.</li>
-                                    <li>الصق الكود (Ctrl+V) ثم اضغط <b>Enter</b> ليقوم بتعبئة الحقول تلقائياً.</li>
-                                </ol>
+                            <div class="mt-2 text-sm leading-relaxed text-yellow-800 space-y-2">
+                                <p>1. اضغط زر <b>"نسخ الكود"</b> الموجود أسفل المربع الأسود.</p>
+                                <p>2. افتح صفحة التحضير في <b>موقع الوزارة</b>.</p>
+                                <p>3. اضغط على مفتاح <b>F12</b> في لوحة المفاتيح (أو انقر بزر الفأرة الأيمن في أي مكان فارغ واختر <b>فحص / Inspect</b>).</p>
+                                <p>4. ستظهر نافذة جانبية، اختر منها تبويب <b>Console</b>.</p>
+                                <p>5. <span class="bg-red-100 text-red-800 px-1 font-bold">هام جداً:</span> إذا ظهر لك تحذير باللون الأحمر أو الأصفر يمنع اللصق، اكتب الكلمة التالية بجانب السهم واضغط Enter:</p>
+                                <code class="block bg-white px-2 py-1 border border-yellow-300 font-mono text-red-600 text-center select-all my-1 font-bold" dir="ltr">allow pasting</code>
+                                <p>6. الآن، اضغط <b>(Ctrl+V)</b> للصق الكود الطويل، ثم اضغط مفتاح <b>Enter</b>.</p>
                             </div>
                         </div>
                     </div>
@@ -130,7 +184,6 @@
                 </button>
             </div>
 
-            <!-- Export/Import Buttons -->
             <div class="flex gap-2 mb-6 bg-gray-50 p-3 rounded-xl border border-gray-200">
                 <button onclick="exportDatabase()" class="flex-1 flex flex-col items-center justify-center p-3 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all text-sm font-medium text-gray-700 shadow-sm">
                     <i data-lucide="download" class="w-5 h-5 mb-1 text-blue-600"></i>
@@ -144,44 +197,53 @@
                 <input type="file" id="fileInput" onchange="importDatabase(event)" accept=".json" class="hidden" />
             </div>
 
-            <!-- Library List -->
-            <div id="libraryList" class="flex-1 overflow-y-auto space-y-3 pb-8">
-                <!-- Items will be injected here -->
-            </div>
+            <div id="libraryList" class="flex-1 overflow-y-auto space-y-3 pb-8"></div>
         </div>
     </div>
+
+    <!-- Hidden Input for Image Upload -->
+    <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
 
     <!-- Main Content -->
     <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mb-8 mt-4">
         
         <!-- Header -->
         <div class="bg-teal-700 p-6 text-white">
-            <div class="flex justify-between items-center flex-wrap gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold flex items-center gap-2">
-                        <i data-lucide="globe" class="w-8 h-8 text-teal-200"></i>
-                        مُيسّر تحضير الدراسات الاجتماعية
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex-1">
+                    <h1 class="font-bold text-white flex flex-col gap-1">
+                        <span class="text-xl md:text-2xl flex items-center gap-2">
+                            <i data-lucide="globe" class="w-6 h-6 text-teal-200"></i>
+                            مُيسّر تحضير مادة الدراسات الاجتماعية
+                        </span>
+                        <span class="text-lg md:text-xl text-teal-100 mr-8">على منصة نور عبر النقل السريع</span>
                     </h1>
-                    <p class="text-teal-100 mt-2 text-sm opacity-90">
-                        مكتبة شاملة لتحضير دروسك ونقلها بسهولة.
-                    </p>
+                    
+                    <div class="mt-3 mr-1">
+                        <p class="text-yellow-300 text-sm font-bold flex items-center gap-1">
+                            <i data-lucide="info" class="w-4 h-4"></i>
+                            تعليمات: املأ التحضير > اضغط زر "نقل" > اتبع الخطوات للصق في نور.
+                        </p>
+                        <p class="text-teal-200/70 text-xs mt-1 font-semibold flex items-center gap-1">
+                            <i data-lucide="pen-tool" class="w-3 h-3"></i>
+                            تصميم: أ. عبدالله بن خلف الرواحي
+                        </p>
+                    </div>
                 </div>
-                <div class="flex gap-2 flex-wrap">
+                
+                <div class="flex gap-2 flex-wrap mt-2 md:mt-0 w-full md:w-auto">
                     <button onclick="toggleModal('libraryModal', true)" class="bg-teal-600 hover:bg-teal-500 text-white border border-teal-400 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold shadow-sm">
                         <i data-lucide="folder-open" class="w-4 h-4"></i>
                         <span>المكتبة (<span id="btnLibraryCount">0</span>)</span>
                     </button>
-                    
                     <button onclick="saveCurrentPlan()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold shadow-sm">
                         <i data-lucide="save" class="w-4 h-4"></i>
                         <span>حفظ</span>
                     </button>
-
                     <button onclick="showScriptDialog()" class="bg-teal-800/50 hover:bg-teal-600 text-teal-50 border border-teal-500/30 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm">
                         <i data-lucide="code" class="w-4 h-4"></i>
                         <span>نقل</span>
                     </button>
-                    
                     <button onclick="clearForm()" class="bg-red-500/20 hover:bg-red-600 text-white border border-red-400/30 px-3 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm" title="تحضير جديد">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                     </button>
@@ -198,7 +260,6 @@
                     <label class="block text-blue-900 font-bold mb-1 text-sm">عنوان الدرس:</label>
                     <input type="text" id="title" placeholder="مثال: الدرس الأول - الموقع الجغرافي للوطن العربي" class="w-full p-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                 </div>
-                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-blue-800 font-bold mb-1 text-xs flex items-center gap-1">
@@ -249,8 +310,6 @@
 
             <hr class="border-gray-100">
 
-            <!-- Sections Container -->
-            
             <!-- 1. Concepts -->
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                 <div class="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center rounded-t-xl">
@@ -259,13 +318,19 @@
                         <i data-lucide="lightbulb" class="w-4 h-4 text-yellow-500"></i>
                         المفاهيم
                     </label>
-                    <button onclick="copyToClipboard('concepts', 'concepts')" class="text-gray-500 hover:text-teal-600">
-                        <i data-lucide="copy" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="triggerImageUpload('concepts')" class="text-gray-500 hover:text-blue-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="إدراج صورة">
+                            <i data-lucide="image-plus" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="copyToClipboard('concepts', 'concepts')" class="text-gray-500 hover:text-teal-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="نسخ (ذكي)">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                            <span class="text-xs mr-1 hidden sm:inline font-bold">نسخ ذكي</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="p-4">
                     <div class="mb-2 flex flex-wrap" id="quick-concepts"></div>
-                    <textarea id="concepts" class="w-full h-20 p-3 border border-gray-300 rounded-lg focus:outline-none resize-y text-gray-700"></textarea>
+                    <div id="concepts" contenteditable="true" class="rich-input" data-placeholder="الصق الجداول أو الصور هنا..."></div>
                 </div>
             </div>
 
@@ -277,13 +342,19 @@
                         <i data-lucide="book-open" class="w-4 h-4 text-blue-500"></i>
                         التهيئة / التمهيد
                     </label>
-                    <button onclick="copyToClipboard('intro', 'intro')" class="text-gray-500 hover:text-teal-600">
-                        <i data-lucide="copy" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="triggerImageUpload('intro')" class="text-gray-500 hover:text-blue-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="إدراج صورة">
+                            <i data-lucide="image-plus" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="copyToClipboard('intro', 'intro')" class="text-gray-500 hover:text-teal-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="نسخ (ذكي)">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                            <span class="text-xs mr-1 hidden sm:inline font-bold">نسخ ذكي</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="p-4">
                     <div class="mb-2 flex flex-wrap" id="quick-intro"></div>
-                    <textarea id="intro" class="w-full h-20 p-3 border border-gray-300 rounded-lg focus:outline-none resize-y text-gray-700"></textarea>
+                    <div id="intro" contenteditable="true" class="rich-input" data-placeholder="يمكنك إضافة صور للتمهيد هنا..."></div>
                 </div>
             </div>
 
@@ -295,13 +366,19 @@
                         <i data-lucide="users" class="w-4 h-4 text-purple-500"></i>
                         الإجراءات / الأنشطة
                     </label>
-                    <button onclick="copyToClipboard('procedures', 'procedures')" class="text-gray-500 hover:text-teal-600">
-                        <i data-lucide="copy" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="triggerImageUpload('procedures')" class="text-gray-500 hover:text-blue-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="إدراج صورة">
+                            <i data-lucide="image-plus" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="copyToClipboard('procedures', 'procedures')" class="text-gray-500 hover:text-teal-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="نسخ (ذكي)">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                            <span class="text-xs mr-1 hidden sm:inline font-bold">نسخ ذكي</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="p-4">
                     <div class="mb-2 flex flex-wrap" id="quick-procedures"></div>
-                    <textarea id="procedures" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none resize-y text-gray-700"></textarea>
+                    <div id="procedures" contenteditable="true" class="rich-input" style="min-height: 200px;" data-placeholder="الصق جداول الأنشطة هنا..."></div>
                 </div>
             </div>
 
@@ -315,13 +392,18 @@
                             <i data-lucide="pen-tool" class="w-4 h-4 text-orange-500"></i>
                             التقويم التكويني
                         </label>
-                        <button onclick="copyToClipboard('formativeAssessment', 'formativeAssessment')" class="text-gray-500 hover:text-teal-600">
-                            <i data-lucide="copy" class="w-4 h-4"></i>
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="triggerImageUpload('formativeAssessment')" class="text-gray-500 hover:text-blue-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="إدراج صورة">
+                                <i data-lucide="image-plus" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="copyToClipboard('formativeAssessment', 'formativeAssessment')" class="text-gray-500 hover:text-teal-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="نسخ (ذكي)">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="p-4">
                          <div class="mb-2 flex flex-wrap" id="quick-formativeAssessment"></div>
-                        <textarea id="formativeAssessment" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none resize-none"></textarea>
+                        <div id="formativeAssessment" contenteditable="true" class="rich-input" data-placeholder="اكتب أو الصق هنا..."></div>
                     </div>
                 </div>
 
@@ -333,13 +415,18 @@
                             <i data-lucide="clipboard-list" class="w-4 h-4 text-red-500"></i>
                             التقويم الختامي
                         </label>
-                        <button onclick="copyToClipboard('summativeAssessment', 'summativeAssessment')" class="text-gray-500 hover:text-teal-600">
-                            <i data-lucide="copy" class="w-4 h-4"></i>
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="triggerImageUpload('summativeAssessment')" class="text-gray-500 hover:text-blue-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="إدراج صورة">
+                                <i data-lucide="image-plus" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="copyToClipboard('summativeAssessment', 'summativeAssessment')" class="text-gray-500 hover:text-teal-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="نسخ (ذكي)">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="p-4">
                         <div class="mb-2 flex flex-wrap" id="quick-summativeAssessment"></div>
-                        <textarea id="summativeAssessment" class="w-full h-32 p-3 border border-gray-300 rounded-lg focus:outline-none resize-none"></textarea>
+                        <div id="summativeAssessment" contenteditable="true" class="rich-input" data-placeholder="اكتب أو الصق هنا..."></div>
                     </div>
                 </div>
             </div>
@@ -352,13 +439,15 @@
                         <i data-lucide="users" class="w-4 h-4 text-indigo-500"></i>
                         ملاحظات الخطة
                     </label>
-                    <button onclick="copyToClipboard('weeklyNotes', 'weeklyNotes')" class="text-gray-500 hover:text-teal-600">
-                        <i data-lucide="copy" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="copyToClipboard('weeklyNotes', 'weeklyNotes')" class="text-gray-500 hover:text-teal-600 bg-white border border-gray-200 p-1 rounded shadow-sm" title="نسخ (ذكي)">
+                            <i data-lucide="copy" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="p-4">
                     <div class="mb-2 flex flex-wrap" id="quick-weeklyNotes"></div>
-                    <textarea id="weeklyNotes" class="w-full h-24 p-3 border border-gray-300 rounded-lg focus:outline-none resize-y text-gray-700"></textarea>
+                    <div id="weeklyNotes" contenteditable="true" class="rich-input" data-placeholder="اكتب الملاحظات هنا..."></div>
                 </div>
             </div>
 
@@ -376,7 +465,7 @@
     <!-- Sticky Quick Copy Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-2 z-40">
         <div class="max-w-4xl mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-2">
-            <span class="text-xs font-bold text-gray-500 ml-2 whitespace-nowrap hidden md:inline">نسخ:</span>
+            <span class="text-xs font-bold text-gray-500 ml-2 whitespace-nowrap hidden md:inline">نسخ سريع:</span>
             
             <button onclick="copyToClipboard('concepts', 'concepts')" id="btn-copy-concepts" class="flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all">
                 <span>1 المفاهيم</span>
@@ -403,11 +492,15 @@
         </div>
     </div>
 
+    <!-- Hidden Container for Full Text HTML Construction -->
+    <div id="fullTextContainer" class="hidden"></div>
+
     <!-- Application Logic -->
     <script>
         // --- DATA & STATE ---
         let currentId = null; // null means new plan
         let savedPlans = [];
+        let currentUploadTarget = null;
 
         // Predefined Quick Inserts
         const quickInserts = {
@@ -447,7 +540,6 @@
             ]
         };
 
-        // Grade Order for Sorting
         const gradeOrder = [
             "الصف الأول", "الصف الثاني", "الصف الثالث", "الصف الرابع", 
             "الصف الخامس", "الصف السادس", "الصف السابع", "الصف الثامن", 
@@ -456,10 +548,8 @@
 
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize Lucide Icons
             lucide.createIcons();
             
-            // Load Data
             const saved = localStorage.getItem('socialStudiesPlans');
             if (saved) {
                 try {
@@ -468,7 +558,6 @@
                 } catch(e) { console.error("Error loading plans", e); }
             }
 
-            // Render Quick Inserts
             for (const [field, items] of Object.entries(quickInserts)) {
                 const container = document.getElementById(`quick-${field}`);
                 if(container) {
@@ -481,25 +570,38 @@
                     });
                 }
             }
+
+            // Attach Paste Listeners to all rich-inputs
+            document.querySelectorAll('.rich-input').forEach(el => {
+                el.addEventListener('paste', handlePaste);
+            });
         });
 
         // --- CORE FUNCTIONS ---
 
         function getValue(id) {
-            return document.getElementById(id).value;
+            const el = document.getElementById(id);
+            if (!el) return '';
+            if (el.classList.contains('rich-input')) {
+                return el.innerHTML;
+            }
+            return el.value;
         }
 
         function setValue(id, val) {
-            document.getElementById(id).value = val || '';
+            const el = document.getElementById(id);
+            if (!el) return;
+            const content = val || '';
+            if (el.classList.contains('rich-input')) {
+                el.innerHTML = content;
+            } else {
+                el.value = content;
+            }
         }
 
         function insertText(fieldId, text) {
             const el = document.getElementById(fieldId);
-            if (el.value) {
-                el.value += ' - ' + text;
-            } else {
-                el.value = text;
-            }
+            el.innerHTML += (el.innerHTML ? ' <br> - ' : '- ') + text;
         }
 
         function toggleModal(id, show) {
@@ -517,47 +619,124 @@
             setTimeout(() => t.classList.add('hidden'), 2000);
         }
 
-        // --- COPY LOGIC ---
+        // --- IMAGE HANDLING & PASTE LOGIC ---
 
-        function copyToClipboard(sourceId, sectionName) {
-            let text = "";
-            if(sourceId === 'FULL_TEXT') {
-                text = generateFullTextContent();
-            } else {
-                text = getValue(sourceId);
+        function triggerImageUpload(targetId) {
+            currentUploadTarget = targetId;
+            document.getElementById('imageUploadInput').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !currentUploadTarget) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = `<img src="${e.target.result}" style="max-width:100%; border-radius:4px;">`;
+                const el = document.getElementById(currentUploadTarget);
+                el.innerHTML += `<br>${img}<br>`;
+                event.target.value = ''; // Reset input
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Intercept paste to convert images to Base64 automatically
+        function handlePaste(e) {
+            const clipboardItems = e.clipboardData.items;
+            const items = [].slice.call(clipboardItems).filter(function (item) {
+                return item.type.indexOf('image') !== -1;
+            });
+
+            if (items.length === 0) {
+                return;
             }
 
-            if (!text) return;
-
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
+            e.preventDefault(); // Stop default paste (which might be a blob url)
             
+            const item = items[0];
+            const blob = item.getAsFile();
+            const reader = new FileReader();
+            
+            reader.onload = function(event) {
+                const img = `<img src="${event.target.result}" style="max-width:100%; border-radius:4px;">`;
+                document.execCommand('insertHTML', false, img);
+            };
+            
+            reader.readAsDataURL(blob);
+        }
+
+        // --- COPY LOGIC (SMART CLIPBOARD) ---
+
+        async function copyToClipboard(sourceId, sectionName) {
+            let contentHTML = "";
+
+            if (sourceId === 'FULL_TEXT') {
+                contentHTML = generateFullTextContentHTML();
+            } else {
+                contentHTML = getValue(sourceId);
+            }
+
+            if (!contentHTML) return;
+
+            try {
+                // Method 1: Modern Clipboard API (Best for Images)
+                const blob = new Blob([contentHTML], { type: 'text/html' });
+                const plainTextBlob = new Blob([document.getElementById(sourceId)?.innerText || ""], { type: 'text/plain' });
+                
+                const clipboardItem = new ClipboardItem({
+                    'text/html': blob,
+                    'text/plain': plainTextBlob
+                });
+                
+                await navigator.clipboard.write([clipboardItem]);
+                showToastMsg();
+                animateButton(sectionName);
+
+            } catch (err) {
+                console.warn('Clipboard API failed, trying fallback execCommand', err);
+                // Fallback: execCommand
+                fallbackCopy(contentHTML, sectionName);
+            }
+        }
+
+        function fallbackCopy(html, sectionName) {
+            const container = document.createElement('div');
+            container.innerHTML = html;
+            container.style.position = 'fixed';
+            container.style.opacity = '0';
+            container.style.pointerEvents = 'none';
+            document.body.appendChild(container);
+
+            const range = document.createRange();
+            range.selectNodeContents(container);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
             try {
                 document.execCommand('copy');
                 showToastMsg();
-                
-                if (sectionName) {
-                    const btn = document.getElementById(`btn-copy-${sectionName}`);
-                    if(btn) {
-                        const originalClass = btn.className;
-                        const originalHTML = btn.innerHTML;
-                        btn.className = "flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-green-600 text-white transition-all";
-                        btn.innerHTML += ' <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>';
-                        setTimeout(() => {
-                            btn.className = originalClass;
-                            btn.innerHTML = originalHTML;
-                        }, 2000);
-                    }
-                }
-
+                animateButton(sectionName);
             } catch (err) {
-                console.error('Copy failed', err);
+                console.error('Fallback copy failed', err);
+                alert('فشل النسخ. يرجى التحديد والنسخ يدوياً (Ctrl+C).');
             } finally {
-                document.body.removeChild(textarea);
+                document.body.removeChild(container);
+                selection.removeAllRanges();
+            }
+        }
+
+        function animateButton(sectionName) {
+            if (sectionName) {
+                const btn = document.getElementById(`btn-copy-${sectionName}`);
+                if(btn) {
+                    btn.classList.add('bg-green-600', 'text-white');
+                    btn.classList.remove('bg-gray-100', 'text-gray-700');
+                    setTimeout(() => {
+                        btn.classList.remove('bg-green-600', 'text-white');
+                        btn.classList.add('bg-gray-100', 'text-gray-700');
+                    }, 2000);
+                }
             }
         }
 
@@ -565,29 +744,30 @@
             copyToClipboard('FULL_TEXT');
         }
 
-        function generateFullTextContent() {
+        function generateFullTextContentHTML() {
             return `
-عنوان الدرس: ${getValue('title')}
-الصف: ${getValue('grade')} | المادة: ${getValue('subject')} | الفصل: ${getValue('semester')}
-----------------------------------------
-=== المفاهيم والتهيئة ===
-${getValue('concepts')}
-
-=== التهيئة / التمهيد / التعلم القبلي ===
-${getValue('intro')}
-
-=== إجراءات سير الدرس / الأنشطة التدريسية ===
-${getValue('procedures')}
-
-=== التقويم التكويني ===
-${getValue('formativeAssessment')}
-
-=== التقويم الختامي ===
-${getValue('summativeAssessment')}
-
-=== ملاحظات الخطة الأسبوعية ===
-${getValue('weeklyNotes')}
-            `.trim();
+            <div dir="rtl" style="font-family: Arial, sans-serif;">
+                <p><b>عنوان الدرس:</b> ${getValue('title')}</p>
+                <p><b>الصف:</b> ${getValue('grade')} | <b>المادة:</b> ${getValue('subject')} | <b>الفصل:</b> ${getValue('semester')}</p>
+                <hr>
+                <h3>=== المفاهيم والتهيئة ===</h3>
+                <div>${getValue('concepts')}</div>
+                <br>
+                <h3>=== التهيئة / التمهيد / التعلم القبلي ===</h3>
+                <div>${getValue('intro')}</div>
+                <br>
+                <h3>=== إجراءات سير الدرس / الأنشطة التدريسية ===</h3>
+                <div>${getValue('procedures')}</div>
+                <br>
+                <h3>=== التقويم التكويني ===</h3>
+                <div>${getValue('formativeAssessment')}</div>
+                <br>
+                <h3>=== التقويم الختامي ===</h3>
+                <div>${getValue('summativeAssessment')}</div>
+                <br>
+                <h3>=== ملاحظات الخطة الأسبوعية ===</h3>
+                <div>${getValue('weeklyNotes')}</div>
+            </div>`;
         }
 
         // --- SCRIPT GENERATION ---
@@ -606,40 +786,42 @@ ${getValue('weeklyNotes')}
         }
 
         function generateAutoFillScript() {
-            const clean = (str) => str.replace(/\n/g, '\\n').replace(/"/g, '\\"').replace(/\r/g, '');
-            
-            const concepts = clean(getValue('concepts'));
-            const intro = clean(getValue('intro'));
-            const procedures = clean(getValue('procedures'));
-            const formative = clean(getValue('formativeAssessment'));
-            const summative = clean(getValue('summativeAssessment'));
-            const notes = clean(getValue('weeklyNotes'));
+            const concepts = getValue('concepts');
+            const intro = getValue('intro');
+            const procedures = getValue('procedures');
+            const formative = getValue('formativeAssessment');
+            const summative = getValue('summativeAssessment');
+            const notes = getValue('weeklyNotes');
+
+            const rawData = [concepts, intro, procedures, formative, summative, notes];
+            const serializedData = JSON.stringify(rawData);
 
             return `
 (function() {
   console.clear();
-  console.log("%c بدء التعبئة الآلية...", "color: white; background: purple; font-size: 14px; padding: 4px;");
+  console.log("%c بدء التعبئة الآلية (JSON Serialized)...", "color: white; background: purple; font-size: 14px; padding: 4px;");
 
-  const dataList = [
-    "${concepts}",          
-    "${intro}",             
-    "${procedures}",        
-    "${formative}",
-    "${summative}",
-    "${notes}"        
-  ];
+  const dataList = JSON.parse('${serializedData.replace(/'/g, "\\'").replace(/\\/g, "\\\\")}');
 
   let successCount = 0;
+  
   if (window.CKEDITOR && window.CKEDITOR.instances) {
     const editorKeys = Object.keys(window.CKEDITOR.instances);
     if (editorKeys.length > 0) {
-       dataList.forEach((text, index) => {
+       console.log("Found CKEditor instances.");
+       dataList.forEach((htmlContent, index) => {
          const key = editorKeys[index]; 
          if (key && window.CKEDITOR.instances[key]) {
-           try { window.CKEDITOR.instances[key].setData(text); successCount++; } catch(e) {}
+           try { 
+               window.CKEDITOR.instances[key].setData(htmlContent); 
+               successCount++; 
+           } catch(e) { console.error(e); }
          }
        });
-       if (successCount > 0) { alert('تم تعبئة ' + successCount + ' حقول (CKEditor)!'); return; }
+       if (successCount > 0) { 
+           alert('تمت تعبئة ' + successCount + ' حقول باستخدام المعالج الذكي!\\n\\nتنبيه: إذا لم تظهر الصور، فهذا بسبب قيود أمنية في موقع الوزارة. يرجى نسخ الصور يدوياً باستخدام أزرار النسخ في التطبيق.'); 
+           return; 
+       }
     }
   }
   
@@ -648,12 +830,17 @@ ${getValue('weeklyNotes')}
   let fields = [...textareas, ...inputs].filter(el => true);
   const startOffset = 0; 
 
-  dataList.forEach((text, index) => {
+  dataList.forEach((htmlContent, index) => {
     let targetIndex = index + startOffset;
     if (fields[targetIndex]) {
-      fields[targetIndex].value = text;
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = htmlContent;
+      const plainText = tempDiv.innerText || tempDiv.textContent; 
+
+      fields[targetIndex].value = plainText; 
       fields[targetIndex].dispatchEvent(new Event('input', { bubbles: true }));
       fields[targetIndex].dispatchEvent(new Event('change', { bubbles: true }));
+      
       if(fields[targetIndex].style.display !== 'none') {
           fields[targetIndex].style.backgroundColor = '#e6fffa';
           fields[targetIndex].style.border = '2px solid purple';
@@ -661,7 +848,12 @@ ${getValue('weeklyNotes')}
       successCount++;
     }
   });
-  alert('تمت المحاولة التقليدية. تم تعبئة ' + successCount + ' حقول.');
+  
+  if (successCount > 0) {
+      alert('تمت التعبئة بالطريقة التقليدية (' + successCount + ' حقول).\\nتنبيه: تم تحويل المحتوى إلى نص عادي لعدم توفر المحرر المتطور. الصور والجداول لن تظهر.');
+  } else {
+      alert('لم يتم العثور على حقول مناسبة للتعبئة.');
+  }
 })();`.trim();
         }
 
@@ -685,7 +877,7 @@ ${getValue('weeklyNotes')}
                 grade: getValue('grade'),
                 subject: getValue('subject'),
                 semester: getValue('semester'),
-                concepts: getValue('concepts'),
+                concepts: getValue('concepts'), // stores innerHTML
                 intro: getValue('intro'),
                 procedures: getValue('procedures'),
                 formativeAssessment: getValue('formativeAssessment'),
@@ -757,8 +949,6 @@ ${getValue('weeklyNotes')}
             }
         }
 
-        // --- SORTING & EXPORT/IMPORT ---
-
         function updateLibraryUI() {
             const container = document.getElementById('libraryList');
             document.getElementById('savedCount').innerText = savedPlans.length;
@@ -772,7 +962,6 @@ ${getValue('weeklyNotes')}
                 return;
             }
 
-            // Grouping Logic
             const grouped = {};
             gradeOrder.forEach(g => grouped[g] = []);
             grouped["غير مصنف"] = []; 
@@ -790,12 +979,10 @@ ${getValue('weeklyNotes')}
 
             let html = '';
             
-            // Iterate through keys: Grade order first, then extras
             const allKeys = [...gradeOrder, ...Object.keys(grouped).filter(k => !gradeOrder.includes(k) && k !== "غير مصنف"), "غير مصنف"];
 
             allKeys.forEach(grade => {
                 const plans = grouped[grade];
-                // Sort plans alphabetically by title inside the folder
                 plans.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
 
                 if (plans && plans.length > 0) {
@@ -841,7 +1028,7 @@ ${getValue('weeklyNotes')}
             });
 
             container.innerHTML = html;
-            lucide.createIcons(); // Re-render icons
+            lucide.createIcons();
         }
 
         function exportDatabase() {
